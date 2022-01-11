@@ -1723,8 +1723,8 @@ namespace bgfx
 					}
 
 					// gl_FragColor and gl_FragData are deprecated for essl > 300
-					if (profile->lang == ShadingLang::ESSL
-					&&  profile->id >= 300)
+					if ((profile->lang == ShadingLang::ESSL && profile->id >= 300) ||
+						(profile->lang == ShadingLang::GLSL && profile->id >= 420))
 					{
 						const bool hasFragColor   = !bx::strFind(input, "gl_FragColor").isEmpty();
 						bool hasFragData[8] = {};

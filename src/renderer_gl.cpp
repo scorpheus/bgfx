@@ -6391,7 +6391,7 @@ namespace bgfx { namespace gl
 							bx::write(&writer, &err, "out vec4 bgfx_FragData[%d];\n", fragData);
 							bx::write(&writer, "#define gl_FragData bgfx_FragData\n", &err);
 						}
-						else if (!bx::findIdentifierMatch(code, "gl_FragColor").isEmpty() )
+						else if (!bx::findIdentifierMatch(code, "gl_FragColor").isEmpty() && bx::findIdentifierMatch(code, "bgfx_FragData0").isEmpty() && bx::findIdentifierMatch(code, "bgfx_FragData").isEmpty())
 						{
 							bx::write(&writer
 								, "out vec4 bgfx_FragColor;\n"
@@ -6548,7 +6548,7 @@ namespace bgfx { namespace gl
 						}
 						else if (!patchedFragData)
 						{
-							if (bx::findIdentifierMatch(code, "bgfx_FragColor").isEmpty() )
+							if (bx::findIdentifierMatch(code, "bgfx_FragColor").isEmpty() && bx::findIdentifierMatch(code, "bgfx_FragData0").isEmpty() && bx::findIdentifierMatch(code, "bgfx_FragData" ).isEmpty())
 							{
 								bx::write(&writer
 									, "out vec4 bgfx_FragColor;\n"
@@ -6638,7 +6638,7 @@ namespace bgfx { namespace gl
 
 				GL_CHECK(glDeleteShader(m_id) );
 				m_id = 0;
-				BGFX_FATAL(false, bgfx::Fatal::InvalidShader, "Failed to compile shader. %d: %s", compiled, log);
+				BGFX_FATAL(false, bgfx::Fatal::InvalidShader, "Failed to compile shader. %d: %s %s", compiled, log, (const char *)code.getPtr());
 			}
 			else if (BX_ENABLED(BGFX_CONFIG_DEBUG)
 				 &&  s_extension[Extension::ANGLE_translated_shader_source].m_supported
