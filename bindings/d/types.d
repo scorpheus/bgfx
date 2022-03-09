@@ -8,11 +8,44 @@ module bindbc.bgfx.types;
 
 public import core.stdc.stdarg : va_list;
 
+enum expandEnum(EnumType, string fqnEnumType = EnumType.stringof) = (){
+	string expandEnum;
+	foreach(m; __traits(allMembers, EnumType)){
+		expandEnum ~= "alias " ~ m ~ " = " ~ fqnEnumType ~ "." ~ m ~ ";";
+	}
+	return expandEnum;
+}();
+
 extern(C) @nogc nothrow:
 
 enum uint BGFX_API_VERSION = 115;
 
 alias bgfx_view_id_t = ushort;
+
+//NOTE: TEMPORARY fix to some missing preprocessor function-macros...
+static BGFX_STATE_BLEND_FUNC_SEPARATE(ulong _srcRGB, ulong _dstRGB, ulong _srcA, ulong _dstA){
+	return (0UL
+			| ( ( cast(ulong)_srcRGB | ( cast(ulong)_dstRGB<<4) )   )
+			| ( ( cast(ulong)_srcA   | ( cast(ulong)_dstA  <<4) )<<8)
+		);
+}
+
+/// Blend equation separate.
+static BGFX_STATE_BLEND_EQUATION_SEPARATE(ulong _equationRGB, ulong _equationA){ return ( cast(ulong)_equationRGB | (cast(ulong)_equationA<<3) ); }
+
+/// Blend function.
+static BGFX_STATE_BLEND_FUNC(ulong _src, ulong _dst){ return BGFX_STATE_BLEND_FUNC_SEPARATE(_src, _dst, _src, _dst); }
+
+/// Blend equation.
+static BGFX_STATE_BLEND_EQUATION(ulong _equation){ return BGFX_STATE_BLEND_EQUATION_SEPARATE(_equation, _equation); }
+
+/// Utility predefined blend modes.
+
+/// Additive blending.
+static BGFX_STATE_BLEND_ADD(){ return (0 | BGFX_STATE_BLEND_FUNC(BGFX_STATE_BLEND_ONE, BGFX_STATE_BLEND_ONE)); }
+
+/// Alpha blend.
+static BGFX_STATE_BLEND_ALPHA(){ return (0 | BGFX_STATE_BLEND_FUNC(BGFX_STATE_BLEND_SRC_ALPHA, BGFX_STATE_BLEND_INV_SRC_ALPHA)); }
 
 /// Memory release callback.
 
@@ -424,6 +457,7 @@ enum bgfx_fatal_t
 
 	BGFX_FATAL_COUNT
 }
+mixin(expandEnum!bgfx_fatal_t);
 
 /// Renderer backend type enum.
 enum bgfx_renderer_type_t
@@ -443,6 +477,7 @@ enum bgfx_renderer_type_t
 
 	BGFX_RENDERER_TYPE_COUNT
 }
+mixin(expandEnum!bgfx_renderer_type_t);
 
 /// Access mode enum.
 enum bgfx_access_t
@@ -453,6 +488,7 @@ enum bgfx_access_t
 
 	BGFX_ACCESS_COUNT
 }
+mixin(expandEnum!bgfx_access_t);
 
 /// Vertex attribute enum.
 enum bgfx_attrib_t
@@ -478,6 +514,7 @@ enum bgfx_attrib_t
 
 	BGFX_ATTRIB_COUNT
 }
+mixin(expandEnum!bgfx_attrib_t);
 
 /// Vertex attribute type enum.
 enum bgfx_attrib_type_t
@@ -490,6 +527,7 @@ enum bgfx_attrib_type_t
 
 	BGFX_ATTRIB_TYPE_COUNT
 }
+mixin(expandEnum!bgfx_attrib_type_t);
 
 /**
  * Texture format enum.
@@ -595,6 +633,7 @@ enum bgfx_texture_format_t
 
 	BGFX_TEXTURE_FORMAT_COUNT
 }
+mixin(expandEnum!bgfx_texture_format_t);
 
 /// Uniform type enum.
 enum bgfx_uniform_type_t
@@ -607,6 +646,7 @@ enum bgfx_uniform_type_t
 
 	BGFX_UNIFORM_TYPE_COUNT
 }
+mixin(expandEnum!bgfx_uniform_type_t);
 
 /// Backbuffer ratio enum.
 enum bgfx_backbuffer_ratio_t
@@ -620,6 +660,7 @@ enum bgfx_backbuffer_ratio_t
 
 	BGFX_BACKBUFFER_RATIO_COUNT
 }
+mixin(expandEnum!bgfx_backbuffer_ratio_t);
 
 /// Occlusion query result.
 enum bgfx_occlusion_query_result_t
@@ -630,6 +671,7 @@ enum bgfx_occlusion_query_result_t
 
 	BGFX_OCCLUSION_QUERY_RESULT_COUNT
 }
+mixin(expandEnum!bgfx_occlusion_query_result_t);
 
 /// Primitive topology.
 enum bgfx_topology_t
@@ -642,6 +684,7 @@ enum bgfx_topology_t
 
 	BGFX_TOPOLOGY_COUNT
 }
+mixin(expandEnum!bgfx_topology_t);
 
 /// Topology conversion function.
 enum bgfx_topology_convert_t
@@ -654,6 +697,7 @@ enum bgfx_topology_convert_t
 
 	BGFX_TOPOLOGY_CONVERT_COUNT
 }
+mixin(expandEnum!bgfx_topology_convert_t);
 
 /// Topology sort order.
 enum bgfx_topology_sort_t
@@ -673,6 +717,7 @@ enum bgfx_topology_sort_t
 
 	BGFX_TOPOLOGY_SORT_COUNT
 }
+mixin(expandEnum!bgfx_topology_sort_t);
 
 /// View mode sets draw call sort order.
 enum bgfx_view_mode_t
@@ -684,6 +729,7 @@ enum bgfx_view_mode_t
 
 	BGFX_VIEW_MODE_COUNT
 }
+mixin(expandEnum!bgfx_view_mode_t);
 
 /// Render frame enum.
 enum bgfx_render_frame_t
@@ -695,6 +741,7 @@ enum bgfx_render_frame_t
 
 	BGFX_RENDER_FRAME_COUNT
 }
+mixin(expandEnum!bgfx_render_frame_t);
 
 /// GPU info.
 struct bgfx_caps_gpu_t
@@ -746,7 +793,7 @@ struct bgfx_caps_t
 	ushort deviceId; /// Selected GPU device id.
 	bool homogeneousDepth; /// True when NDC depth is in [-1, 1] range, otherwise its [0, 1].
 	bool originBottomLeft; /// True when NDC origin is at bottom left.
-	byte numGPUs; /// Number of enumerated GPUs.
+	ubyte numGPUs; /// Number of enumerated GPUs.
 	bgfx_caps_gpu_t[4] gpu; /// Enumerated GPUs.
 	bgfx_caps_limits_t limits; /// Renderer runtime limits.
 
@@ -817,8 +864,8 @@ struct bgfx_resolution_t
 	uint width; /// Backbuffer width.
 	uint height; /// Backbuffer height.
 	uint reset; /// Reset parameters.
-	byte numBackBuffers; /// Number of back buffers.
-	byte maxFrameLatency; /// Maximum frame latency.
+	ubyte numBackBuffers; /// Number of back buffers.
+	ubyte maxFrameLatency; /// Maximum frame latency.
 }
 
 /// Configurable runtime limits parameters.
@@ -884,14 +931,14 @@ struct bgfx_init_t
  */
 struct bgfx_memory_t
 {
-	byte* data; /// Pointer to data.
+	ubyte* data; /// Pointer to data.
 	uint size; /// Data size.
 }
 
 /// Transient index buffer.
 struct bgfx_transient_index_buffer_t
 {
-	byte* data; /// Pointer to data.
+	ubyte* data; /// Pointer to data.
 	uint size; /// Data size.
 	uint startIndex; /// First index.
 	bgfx_index_buffer_handle_t handle; /// Index buffer handle.
@@ -901,7 +948,7 @@ struct bgfx_transient_index_buffer_t
 /// Transient vertex buffer.
 struct bgfx_transient_vertex_buffer_t
 {
-	byte* data; /// Pointer to data.
+	ubyte* data; /// Pointer to data.
 	uint size; /// Data size.
 	uint startVertex; /// First vertex.
 	ushort stride; /// Vertex stride.
@@ -912,7 +959,7 @@ struct bgfx_transient_vertex_buffer_t
 /// Instance data buffer info.
 struct bgfx_instance_data_buffer_t
 {
-	byte* data; /// Pointer to data.
+	ubyte* data; /// Pointer to data.
 	uint size; /// Data size.
 	uint offset; /// Offset in vertex buffer.
 	uint num; /// Number of instances.
@@ -929,8 +976,8 @@ struct bgfx_texture_info_t
 	ushort height; /// Texture height.
 	ushort depth; /// Texture depth.
 	ushort numLayers; /// Number of layers in texture array.
-	byte numMips; /// Number of MIP maps.
-	byte bitsPerPixel; /// Format bits per pixel.
+	ubyte numMips; /// Number of MIP maps.
+	ubyte bitsPerPixel; /// Format bits per pixel.
 	bool cubeMap; /// Texture is cubemap.
 }
 
@@ -950,7 +997,7 @@ struct bgfx_attachment_t
 	ushort mip; /// Mip level.
 	ushort layer; /// Cubemap side or depth layer/slice to use.
 	ushort numLayers; /// Number of texture layer/slice(s) in array to use.
-	byte resolve; /// Resolve flags. See: `BGFX_RESOLVE_*`
+	ubyte resolve; /// Resolve flags. See: `BGFX_RESOLVE_*`
 }
 
 /// Transform data.
@@ -1022,7 +1069,7 @@ struct bgfx_stats_t
 	ushort textHeight; /// Debug text height in characters.
 	ushort numViews; /// Number of view stats.
 	bgfx_view_stats_t* viewStats; /// Array of View stats.
-	byte numEncoders; /// Number of encoders used during frame.
+	ubyte numEncoders; /// Number of encoders used during frame.
 	bgfx_encoder_stats_t* encoderStats; /// Array of encoder stats.
 }
 
